@@ -1,8 +1,8 @@
 ﻿namespace Todo.Data.Entities {
     public enum Importance
     {
-        High,
-        Medium,
-        Low,
+        Low = 0,
+        Medium = 1,
+        High = 3,
     }
 }
