@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,10 +32,35 @@ namespace Todo.Controllers
             return View(viewmodel);
         }
 
-        public IActionResult Detail(int todoListId)
+        public IActionResult Detail(int todoListId, string sortBy, bool hideDone)
         {
             var todoList = dbContext.SingleTodoList(todoListId);
-            var viewmodel = TodoListDetailViewmodelFactory.Create(todoList);
+
+            // filter items by importance or rank
+            switch (sortBy)
+            {
+                case "importanceAsc":
+                    todoList.Items = todoList.Items.OrderBy(item => (int)item.Importance).ToList();
+                    break;
+                case "importanceDesc":
+                    todoList.Items = todoList.Items.OrderByDescending(item => (int)item.Importance).ToList();
+                    break;
+                case "rankAsc":
+                    todoList.Items = todoList.Items.OrderBy(item => item.Rank).ToList();
+                    break;
+                case "rankDesc":
+                    todoList.Items = todoList.Items.OrderByDescending(item => item.Rank).ToList();
+                    break;
+                default:
+                    todoList.Items = todoList.Items.OrderByDescending(item => (int)item.Importance).ToList();
+                    break;
+            }
+
+            // filter done items
+            if (hideDone)
+                todoList.Items = todoList.Items.Where(item => item.IsDone == false).ToList();
+
+            var viewmodel = TodoListDetailViewmodelFactory.Create(todoList, sortBy, hideDone);
             return View(viewmodel);
         }
 
@@ -57,7 +83,7 @@ namespace Todo.Controllers
             await dbContext.AddAsync(todoList);
             await dbContext.SaveChangesAsync();
 
-            return RedirectToAction("Create", "TodoItem", new {todoList.TodoListId});
+            return RedirectToAction("Create", "TodoItem", new { todoList.TodoListId });
         }
     }
 }

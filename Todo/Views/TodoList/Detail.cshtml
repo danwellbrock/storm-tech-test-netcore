@@ -17,16 +17,47 @@
             <a asp-action="Create" asp-controller="TodoItem" asp-route-todoListId="@Model.TodoListId">
                 <strong>Add New Item</strong>
             </a>
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" id="toggleDone" />Hide done
-                </label>
+        </li>
+
+        <li class="list-group-item">
+            <div class="row">
+                <div class="col-md-8">
+
+                    Order by:&nbsp;
+                    @if (Model.SortBy == "rankAsc")
+                    {
+                        @Html.ActionLink("Rank Desc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "rankDesc", hideDone = Model.HideDone})
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Rank Asc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "rankAsc", hideDone = Model.HideDone})
+
+                    }
+                    &nbsp;|&nbsp;
+                    @if (Model.SortBy == "importanceAsc")
+                    {
+                        @Html.ActionLink("Importance Desc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "importanceDesc", hideDone = Model.HideDone})
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Importance Asc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "importanceAsc", hideDone = Model.HideDone})
+                    }
+                </div>
+                <div class="col-md-4 text-right">
+
+                    @if (Model.HideDone == true)
+                    {
+                        @Html.ActionLink("Show Done", "Detail", new { todoListId = Model.TodoListId, sortBy = Model.SortBy, hideDone  = false})
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Hide Done", "Detail", new { todoListId = Model.TodoListId, sortBy = Model.SortBy, hideDone  = true})
+                    }
+                </div>
             </div>
         </li>
 
-
-
-        @foreach (var item in Model.Items.OrderByDescending(i => (int)i.Importance))
+        @foreach (var item in Model.Items)
         {
             string contextualClasses = (item.IsDone ? "item-done " : string.Empty);
 
@@ -47,8 +78,12 @@
             <li class="list-group-item @contextualClasses">
 
                 <div class="row">
-
-                    <div class="col-md-8">
+                    <div class="col-md-1">
+                        <small>
+                            @item.Rank
+                        </small>
+                    </div>
+                    <div class="col-md-7">
                         <a asp-action="Edit" asp-controller="TodoItem" asp-route-todoItemId="@item.TodoItemId">
 
                             @if (item.IsDone)
@@ -76,20 +111,3 @@
         }
     </ul>
 </div>
-
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            // set list visibility from locastorage bool
-            itemDoneChecked = JSON.parse(localStorage.getItem('toggleDoneChecked'));
-            $(".item-done").toggle(!itemDoneChecked);
-            $("#toggleDone").prop('checked', itemDoneChecked);
-
-            // toggle done change event
-            $("#toggleDone").change(function() {
-                $(".item-done").toggle();
-                localStorage.setItem('toggleDoneChecked', $(this).is(':checked'));
-            });
-        });
-    </script>
-} 

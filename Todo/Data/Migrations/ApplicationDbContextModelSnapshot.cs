@@ -224,6 +224,9 @@ namespace Todo.Data.Migrations
                     b.Property<bool>("IsDone")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Rank")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ResponsiblePartyId")
                         .HasColumnType("TEXT");
 
