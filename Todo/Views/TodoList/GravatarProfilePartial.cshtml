@@ -8,11 +8,11 @@
 
 <small>
 
-    <strong>@Model.Email</strong>
+    @Model.Email
     @if (profile != null)
     {
         <br />
-        <strong>@profile.DisplayName</strong>
+        @profile.DisplayName
         <img src="@profile.Photo" class="profile-image" alt="@profile.DisplayName" />
     }
     else
