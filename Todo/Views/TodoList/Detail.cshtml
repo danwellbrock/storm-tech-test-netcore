@@ -83,7 +83,7 @@
                             @item.Rank
                         </small>
                     </div>
-                    <div class="col-md-7">
+                    <div class="col-md-5">
                         <a asp-action="Edit" asp-controller="TodoItem" asp-route-todoItemId="@item.TodoItemId">
 
                             @if (item.IsDone)
@@ -97,16 +97,12 @@
                         </a>
                     </div>
 
-                    <div class="col-md-4 text-right">
-                        <small>
-                            @item.ResponsibleParty.UserName
-
-                            <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
-
-                        </small>
+                    <div class="col-md-6 text-right">
+                        <div class="content-gravatar-partial" data-email="@item.ResponsibleParty.Email">
+                            <img src="~/images/loading.gif" width="20px" alt="Loading data, please wait" />
+                        </div>
                     </div>
                 </div>
-
             </li>
         }
     </ul>

@@ -35,3 +35,7 @@ body {
         display: none;
     }
 }
+
+.profile-image {
+    width: 30px;
+}

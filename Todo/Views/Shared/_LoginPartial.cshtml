@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Identity
 @using Todo.Services
+@using Todo.Services.Gravatar
 
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -12,13 +13,24 @@
                 <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
 
                     @{
-
                         var iu = await UserManager.GetUserAsync(User);
                         var emailAddress = await UserManager.GetEmailAsync(iu);
-                        var gravatarhash = Gravatar.GetHash(emailAddress);
+                        var profile = await GravatarApi.GetProfile(emailAddress);
+                    }
+                    
+                    @*Use gravatar profile (displayname + photo) if exists*@
+                    @if (profile != null)
+                    {
+                        <img src="@profile.Photo" class="profile-image" alt="@profile.DisplayName" />
+                        @profile.DisplayName
+
+                        <text> | </text>
+                    }
+                    else
+                    {
+                        <img src="/images/default_no_image.png" class="profile-image" alt="@Model.Email" />
                     }
 
-                    <img src="https://www.gravatar.com/avatar/@gravatarhash?s=30" />
                     @UserManager.GetUserName(User)
                 </a>
             </li>

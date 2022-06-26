@@ -1,0 +1,22 @@
+﻿@using Todo.Services
+@using Todo.Services.Gravatar
+@model Todo.Models.TodoLists.TodoListGravatarViewmodel
+
+@{
+    var profile = await GravatarApi.GetProfile(Model.Email);
+}
+
+<small>
+
+    <strong>@Model.Email</strong>
+    @if (profile != null)
+    {
+        <br />
+        <strong>@profile.DisplayName</strong>
+        <img src="@profile.Photo" class="profile-image" alt="@profile.DisplayName" />
+    }
+    else
+    {
+        <img src="/images/default_no_image.png" class="profile-image" alt="@Model.Email" />
+    }
+</small>
