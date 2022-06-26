@@ -31,7 +31,7 @@ namespace Todo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TodoItemCreateFields fields)
         {
-            if (!ModelState.IsValid) { return View(fields); }
+            if (!ModelState.IsValid) { return RedirectToListDetail(fields.TodoListId); }
 
             var item = new TodoItem(fields.TodoListId, fields.ResponsiblePartyId, fields.Title, fields.Importance, fields.Rank);
 
