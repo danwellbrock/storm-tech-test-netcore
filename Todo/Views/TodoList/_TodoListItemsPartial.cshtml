@@ -1,0 +1,56 @@
+﻿@using Todo.Data.Entities
+@using Todo.Services
+@model Todo.Models.TodoLists.TodoListDetailViewmodel
+
+@*store original todoitem ids to compare*@
+<input type="hidden" name="originalTodoItemIds" value="@string.Join(",", Model.Items.Select(ti => ti.TodoItemId))" />
+
+@foreach (var item in Model.Items)
+{
+
+    string contextualClasses = (item.IsDone ? "todoitem-complete " : string.Empty);
+
+    switch (item.Importance)
+    {
+        case Importance.High:
+            contextualClasses += "list-group-item-danger";
+            break;
+        case Importance.Low:
+            contextualClasses += "list-group-item-info";
+            break;
+        default:
+            contextualClasses += "";
+            break;
+    }
+
+    <li class="list-group-item @contextualClasses" title="Drag and drop to reorder item">
+
+        <div class="row">
+            <div class="col-md-1">
+                <small>
+                    <input type="hidden" name="todoItemId" value="@item.TodoItemId" />
+                    <span class="item-rank">@item.Rank</span>
+                </small>
+            </div>
+            <div class="col-md-5">
+                <a asp-action="Edit" asp-controller="TodoItem" asp-route-todoItemId="@item.TodoItemId">
+
+                    @if (item.IsDone)
+                    {
+                        <s>@item.Title</s>
+                    }
+                    else
+                    {
+                        <text>@item.Title</text>
+                    }
+                </a>
+            </div>
+
+            <div class="col-md-6 text-right">
+                <div class="content-gravatar-partial" data-email="@item.ResponsibleParty.Email">
+                    <img src="~/images/loading.gif" width="20px" alt="Loading data, please wait" />
+                </div>
+            </div>
+        </div>
+    </li>
+}

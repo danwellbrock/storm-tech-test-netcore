@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Todo.Data;
@@ -27,13 +29,46 @@ namespace Todo.Controllers
             return View(fields);
         }
 
+        [HttpGet]
+        public IActionResult CreatePartial(int todoListId)
+        {
+            var todoList = dbContext.SingleTodoList(todoListId);
+            var fields = TodoItemCreateFieldsFactory.Create(todoList, User.Id());
+            return PartialView("_CreatePartial", fields);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePartial(TodoItemCreateFields fields)
+        {
+            try
+            {
+                if (!ModelState.IsValid) { return PartialView("_CreatePartial", fields); }
+
+                var newRank = dbContext.SingleTodoList(fields.TodoListId).Items.Count + 1;
+
+                var item = new TodoItem(fields.TodoListId, fields.ResponsiblePartyId, fields.Title, fields.Importance, newRank);
+
+                await dbContext.AddAsync(item);
+                await dbContext.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch
+            {
+                return Json(new { success = false });
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TodoItemCreateFields fields)
         {
-            if (!ModelState.IsValid) { return RedirectToListDetail(fields.TodoListId); }
+            if (!ModelState.IsValid) { return View(fields); }
 
-            var item = new TodoItem(fields.TodoListId, fields.ResponsiblePartyId, fields.Title, fields.Importance, fields.Rank);
+            var newRank = dbContext.SingleTodoList(fields.TodoListId).Items.Count + 1;
+
+            var item = new TodoItem(fields.TodoListId, fields.ResponsiblePartyId, fields.Title, fields.Importance, newRank);
 
             await dbContext.AddAsync(item);
             await dbContext.SaveChangesAsync();

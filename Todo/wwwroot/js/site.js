@@ -4,13 +4,4 @@
 // Write your JavaScript code.
 $(document).ready(function (e) {
 
-    // locate each gravatar partial section.
-    // if it has a URL set, load profile contents into the area.
-    $(".content-gravatar-partial").each(function (index, item) {
-        var emailAddress = $(item).data("email");
-
-        if (emailAddress && emailAddress.length > 0) {
-            $(item).load("GravatarProfilePartial?email=" + emailAddress);
-        }
-    });
 }); 

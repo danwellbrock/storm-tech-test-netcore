@@ -32,36 +32,35 @@ namespace Todo.Controllers
             return View(viewmodel);
         }
 
-        public IActionResult Detail(int todoListId, string sortBy, bool hideDone)
+        public IActionResult Detail(int todoListId, string sortBy)
         {
             var todoList = dbContext.SingleTodoList(todoListId);
 
             // filter items by importance or rank
-            switch (sortBy)
+            todoList.Items = sortBy switch
             {
-                case "importanceAsc":
-                    todoList.Items = todoList.Items.OrderBy(item => (int)item.Importance).ToList();
-                    break;
-                case "importanceDesc":
-                    todoList.Items = todoList.Items.OrderByDescending(item => (int)item.Importance).ToList();
-                    break;
-                case "rankAsc":
-                    todoList.Items = todoList.Items.OrderBy(item => item.Rank).ToList();
-                    break;
-                case "rankDesc":
-                    todoList.Items = todoList.Items.OrderByDescending(item => item.Rank).ToList();
-                    break;
-                default:
-                    todoList.Items = todoList.Items.OrderByDescending(item => (int)item.Importance).ToList();
-                    break;
-            }
+                "rankAsc" => todoList.Items.OrderBy(item => item.Rank).ToList(),
+                "rankDesc" => todoList.Items.OrderByDescending(item => item.Rank).ToList(),
+                _ => todoList.Items.OrderBy(item => item.Rank).ToList(),
+            };
 
-            // filter done items
-            if (hideDone)
-                todoList.Items = todoList.Items.Where(item => item.IsDone == false).ToList();
-
-            var viewmodel = TodoListDetailViewmodelFactory.Create(todoList, sortBy, hideDone);
+            var viewmodel = TodoListDetailViewmodelFactory.Create(todoList, sortBy);
             return View(viewmodel);
+        }
+
+        public IActionResult DetailTodoListItemsPartial(int todoListId, string sortBy)
+        {
+            var todoList = dbContext.SingleTodoList(todoListId);
+
+            todoList.Items = sortBy switch
+            {
+                "rankAsc" => todoList.Items.OrderBy(item => item.Rank).ToList(),
+                "rankDesc" => todoList.Items.OrderByDescending(item => item.Rank).ToList(),
+                _ => todoList.Items.OrderBy(item => item.Rank).ToList(),
+            };
+
+            var viewmodel = TodoListDetailViewmodelFactory.Create(todoList, sortBy);
+            return PartialView("_TodoListItemsPartial", viewmodel);
         }
 
         public IActionResult GravatarProfilePartial(string email)
@@ -89,6 +88,31 @@ namespace Todo.Controllers
             await dbContext.SaveChangesAsync();
 
             return RedirectToAction("Create", "TodoItem", new { todoList.TodoListId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateRank(int[] todoItemIDs)
+        {
+            try
+            {
+                var rank = 1;
+
+                foreach (var id in todoItemIDs)
+                {
+                    var todoItem = dbContext.SingleTodoItem(id);
+                    todoItem.Rank = rank;
+                    dbContext.Update(todoItem);
+                    await dbContext.SaveChangesAsync();
+
+                    rank++;
+                }
+
+                return Json(new { success = true });
+            }
+            catch
+            {
+                return Json(new { success = false });
+            }
         }
     }
 }

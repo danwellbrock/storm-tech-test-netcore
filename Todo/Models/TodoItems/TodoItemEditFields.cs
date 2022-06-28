@@ -9,6 +9,8 @@ namespace Todo.Models.TodoItems
         public string Title { get; set; }
         public string TodoListTitle { get; set; }
         public int TodoItemId { get; set; }
+
+        [DisplayName("Is Done?")]
         public bool IsDone { get; set; }
 
         [DisplayName("Assigned to")]

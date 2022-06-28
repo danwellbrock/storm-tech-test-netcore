@@ -1,10 +1,9 @@
 ﻿@using Todo.Controllers
 @using Todo.Data
 @using Todo.Data.Entities
+@using Todo.Models.TodoItems
 @using Todo.Services
 @using Todo.Views.TodoItem
-
-@inject ApplicationDbContext dbContext
 
 @model Todo.Models.TodoLists.TodoListDetailViewmodel
 
@@ -12,105 +11,228 @@
     ViewData["Title"] = $"List: {Model.Title}";
 }
 
-<h2>@ViewData["Title"]</h2>
+@*show success/failure message after todoitem rank is updated*@
 
-<h4>Add New Item</h4>
-
-<div class="col-md-4">
-    <section>
-        @using (Html.BeginForm("Create", "TodoItem", FormMethod.Post, new { @id = "newTodoItem" }))
-        {
-            <span id="addNewItemError" class="text-danger"></span>
-
-            @Html.AntiForgeryToken()
-
-            @Html.HiddenFor(m => m.TodoListId)
-            <div class="form-group">
-                <label asp-for="TodoItemCreateFields.Title"></label>
-                <input name="Title" class="form-control" required="required" />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TodoItemCreateFields.Rank"></label>
-                <input name="Rank" class="form-control" required="required" type="number" />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TodoItemCreateFields.Importance"></label>
-                @Html.DropDownList("Importance",
-            SelectListConvenience.ImportanceSelectListItems,
-            new {@class="form-control"}
-            )
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TodoItemCreateFields.ResponsiblePartyId"></label>
-                @Html.DropDownList("ResponsiblePartyId",
-            dbContext.UserSelectListItems(),
-            new {@class="form-control"}
-            )
-            </div>
-
-            <div class="form-group">
-                <button type="submit" class="btn btn-default">Save</button>
-            </div>
-        }
-    </section>
+<div class="col-md-8 todo-list-heading">
+    <h2>@ViewData["Title"]</h2>
+    <div id="popupAlert" style="display:none"></div>
 </div>
 
-<div class="col-md-6">
-
+<div class="col-md-8">
     <ul id="todoItems" class="list-group">
         <li class="list-group-item">
             <div class="row">
                 <div class="col-md-8">
+                    <a id="lnkShowCreateItemForm" href="#"><strong>Add New Item</strong></a>
 
-                    Order by:&nbsp;
+                    &nbsp;|&nbsp;Order by:&nbsp;
                     @if (Model.SortBy == "rankAsc")
                     {
-                        @Html.ActionLink("Rank Desc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "rankDesc", hideDone = Model.HideDone})
+                        @Html.ActionLink("Rank Desc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "rankDesc"})
                     }
                     else
                     {
-                        @Html.ActionLink("Rank Asc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "rankAsc", hideDone = Model.HideDone})
-
-                    }
-                    &nbsp;|&nbsp;
-                    @if (Model.SortBy == "importanceAsc")
-                    {
-                        @Html.ActionLink("Importance Desc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "importanceDesc", hideDone = Model.HideDone})
-                    }
-                    else
-                    {
-                        @Html.ActionLink("Importance Asc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "importanceAsc", hideDone = Model.HideDone})
+                        @Html.ActionLink("Rank Asc", "Detail", new { todoListId = Model.TodoListId, sortBy  = "rankAsc"})
                     }
                 </div>
-                <div class="col-md-4 text-right">
-
-                    @if (Model.HideDone == true)
-                    {
-                        @Html.ActionLink("Show Done", "Detail", new { todoListId = Model.TodoListId, sortBy = Model.SortBy, hideDone  = false})
-                    }
-                    else
-                    {
-                        @Html.ActionLink("Hide Done", "Detail", new { todoListId = Model.TodoListId, sortBy = Model.SortBy, hideDone  = true})
-                    }
+                <div class="col-md-4 text-right checkbox">
+                    <label>Hide Done<input type="checkbox" id="cbHideDone" /></label>
                 </div>
             </div>
         </li>
+        <span id="divTodoListItemsPartial">
+            <partial name="_TodoListItemsPartial" model="@Model" />
+        </span>
 
-        @foreach (var item in Model.Items)
-        {
-            <partial name="_TodoItemPartial" model="item" />
-        }
     </ul>
 </div>
+@*modal placeholder*@
+<div id="partialFormViewContainer"></div>
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $("#newTodoItem").validate();
+        $(function() {
+            // initialize show/hide
+            initShowHideDoneItems();
+
+            // initialize Gravatar data
+            initGravatarData();
+
+            // show/hide done items
+            $('#cbHideDone').change(function() {
+                // store change in localstorage
+                localStorage.setItem('todo.hidedoneitems', this.checked)
+
+                if (this.checked) {
+                    // hide done items
+                    $('.todoitem-complete').hide();
+
+                    const value = localStorage.getItem('todo.hidedoneitems');
+                }
+                else {
+                    // show all items
+                    $('.todoitem-complete').show();
+                }
+            });
+
+            // make todoitems sortable
+            $("#todoItems").sortable({
+                items: 'li:not(li:first-child)',
+                cursor: 'pointer',
+                axis: 'y',
+                dropOnEmpty: false,
+                start: function(e, ui) {
+                    ui.item.addClass("selected");
+                },
+                stop: function(e, ui) {
+                    ui.item.removeClass("selected");
+
+                    // if order reversed you need to reverse the new ranking
+                    var orderReversed = ('@Model.SortBy' == "rankDesc");
+
+                    // get new order
+                    var newIds = [];
+                    $("input[name=todoItemId]").each(function() {
+                        newIds.push(parseInt($(this).val()));
+                    });
+
+                    var originalTodoItemIds = $("input[name=originalTodoItemIds]").val().split(",").map(Number);
+
+                    // check array equality, only update when a change occurs
+                    var arraysEqual = IsArrayEqual(originalTodoItemIds, newIds);
+
+                    if (!arraysEqual) {
+                        $.ajax({
+                            url: '@Url.Action("UpdateRank")',
+                            type: 'post',
+                            data: {
+                                todoItemIDs: (orderReversed ? newIds.reverse() : newIds)
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.success) {
+                                    var rank = 1;
+
+                                    // update ranks on screen
+                                    if (orderReversed) {
+                                        rank = $(".item-rank").length;
+
+                                        $(".item-rank").each(function() {
+                                            $(this).text(rank);
+                                            rank--;
+                                        });
+                                    }
+                                    else {
+                                        $(".item-rank").each(function() {
+                                            $(this).text(rank);
+                                            rank++;
+                                        });
+                                    }
+
+                                    // update originalTodoItemIds for new rank order
+                                    $("input[name=originalTodoItemIds]").val(newIds.join(","));
+
+                                    // show success message popup
+                                    showAlertPopup('@Model.AlertSortSuccessMsg', 'success');
+
+                                } else {
+                                    // show failure message popup
+                                    showAlertPopup('@Model.AlertSortErrorMsg', 'danger');
+                                }
+                            },
+                            error: function() {
+                                // show failure message popup
+                                showAlertPopup('@Model.AlertSortErrorMsg', 'danger');
+                            }
+                        });
+                    }
+                },
+                receive: function(e, ui) {
+                    $(this).find("tbody").append(ui.item);
+                }
+            });
+
+            // open create item form
+            $("#lnkShowCreateItemForm").click(function() {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Html.Raw(Url.Action("CreatePartial","TodoItem"))?todoListId=' + @Model.TodoListId,
+                    success: function(data) {
+                        $('#partialFormViewContainer').html(data);
+                        $('#partialFormViewContainer').dialog('open');
+                    }
+                });
+            });
+
+            // initialise create form modal
+            $("#partialFormViewContainer").dialog({
+                autoOpen: false,
+                modal: true,
+                title: '@Model.Title' + ' -  New Item',
+                closeText: "Close window"
+            });
         });
+
+        // generic popup alert
+        function showAlertPopup(message, cssClass) {
+            var popupAlert = $('#popupAlert');
+            popupAlert.attr('class', 'alert alert-' + cssClass);
+            popupAlert.text(message);
+            popupAlert.show();
+            setTimeout(function() { popupAlert.fadeOut(); }, 3000);
+        }
+
+        // refersh items after a new item is added
+        function ReloadTodoItems() {
+            var sortBy = '@(string.IsNullOrEmpty(Model.SortBy) ? "rankAsc" : Model.SortBy)';
+
+            $.ajax({
+                type: 'GET',
+                url: '@Html.Raw(Url.Action("DetailTodoListItemsPartial"))?todoListId=' + @Model.TodoListId + '&sortBy=' + sortBy,
+                success: function(data) {
+                    $('#divTodoListItemsPartial').html(data);
+                    initShowHideDoneItems();
+                    initGravatarData();
+                }
+            });
+        };
+
+        // custom function to compare 2 arrays for equality
+        function IsArrayEqual(array1, array2) {
+            var isEqual = array1.length == array2.length && array1.every(function(element, index) {
+                return element === array2[index];
+            });
+
+            return isEqual;
+        };
+
+        // initialize show/hide checkbox and list items
+        function initShowHideDoneItems() {
+            var hideDone = localStorage.getItem('todo.hidedoneitems');
+            if (hideDone === null) {
+                // initialize to false
+                localStorage.setItem('todo.hidedoneitems', this.checked)
+            } else {
+                hideDone = JSON.parse(hideDone)
+
+                if (hideDone) {
+                    $('.todoitem-complete').hide();
+                    $('#cbHideDone').prop('checked', true);
+                }
+            }
+        };
+
+        // get Gravatar data
+        function initGravatarData() {
+            // loop through partial gravatar divs and load data
+            $(".content-gravatar-partial").each(function(index, item) {
+                var emailAddress = $(item).data("email");
+
+                if (emailAddress && emailAddress.length > 0) {
+                    $(item).load("GravatarProfilePartial?email=" + emailAddress);
+                }
+            });
+        }
 
     </script>
 }

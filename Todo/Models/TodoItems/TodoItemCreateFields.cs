@@ -6,6 +6,8 @@ namespace Todo.Models.TodoItems
 {
     public class TodoItemCreateFields
     {
+        public string AlertCreateItemSuccessMsg { get; } = "Success! New item created.";
+        public string AlertCreateItemErrorMsg { get; } = "Error! New item not created!";
         public int TodoListId { get; set; }
 
         public string Title { get; set; }
@@ -13,11 +15,8 @@ namespace Todo.Models.TodoItems
 
         [DisplayName("Assigned to")]
         public string ResponsiblePartyId { get; set; }
-        
-        public Importance Importance { get; set; } = Importance.Medium;
 
-        [Required()]
-        public int Rank { get; set; }
+        public Importance Importance { get; set; } = Importance.Medium;
 
         public TodoItemCreateFields() { }
 

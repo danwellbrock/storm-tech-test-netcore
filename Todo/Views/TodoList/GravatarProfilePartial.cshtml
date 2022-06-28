@@ -7,16 +7,14 @@
 }
 
 <small>
-
-    @Model.Email
     @if (profile != null)
     {
-        <br />
-        @profile.DisplayName
+        @profile.DisplayName<text>&nbsp;|&nbsp;</text>@Model.Email
         <img src="@profile.Photo" class="profile-image" alt="@profile.DisplayName" />
     }
     else
     {
+        @Model.Email
         <img src="/images/default_no_image.png" class="profile-image" alt="@Model.Email" />
     }
 </small>

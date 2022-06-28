@@ -5,20 +5,23 @@ namespace Todo.Models.TodoLists
 {
     public class TodoListDetailViewmodel
     {
+        public string AlertSortSuccessMsg { get; } = "Success! Rank updated.";
+        public string AlertSortErrorMsg { get; } = "Error! Rank update failed";
+
         public int TodoListId { get; }
         public string Title { get; }
         public ICollection<TodoItemSummaryViewmodel> Items { get; }
         public string SortBy { get; set; }
-        public bool HideDone { get; set; }
+
         public TodoItemCreateFields TodoItemCreateFields { get; set; }
 
-        public TodoListDetailViewmodel(int todoListId, string title, ICollection<TodoItemSummaryViewmodel> items, string sortBy, bool hideDone)
+        public TodoListDetailViewmodel(int todoListId, string title, ICollection<TodoItemSummaryViewmodel> items, string sortBy)
         {
             Items = items;
             TodoListId = todoListId;
             Title = title;
             SortBy = sortBy;
-            HideDone = hideDone;
+            TodoItemCreateFields = new TodoItemCreateFields();
         }
     }
 }

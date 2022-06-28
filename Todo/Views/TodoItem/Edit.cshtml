@@ -41,24 +41,24 @@
                     m => m.Importance,
                     SelectListConvenience.ImportanceSelectListItems,
                     new {@class="form-control"}
-                    )
+                )
                 <span asp-validation-for="Importance" class="text-danger"></span>
             </div>
 
             <div class="checkbox">
                 <label>
-                    <input asp-for="IsDone" /> @Html.DisplayNameFor(m => m.IsDone)
+                    <input asp-for="IsDone" /> <strong>@Html.DisplayNameFor(m => m.IsDone)</strong>
                 </label>
             </div>
 
 
             <div class="form-group">
                 <label asp-for="ResponsiblePartyId"></label>
-                @Html.DropDownListFor(
+                    @Html.DropDownListFor(
                     m => m.ResponsiblePartyId,
                     dbContext.UserSelectListItems(),
                     new {@class="form-control"}
-                    )
+                )
                 <span asp-validation-for="ResponsiblePartyId" class="text-danger"></span>
             </div>
 

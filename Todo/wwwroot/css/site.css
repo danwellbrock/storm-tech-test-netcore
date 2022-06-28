@@ -39,3 +39,32 @@ body {
 .profile-image {
     width: 30px;
 }
+
+.todo-list-heading {
+    margin: 10px 0;
+}
+
+.selected, .selected a {
+    background-color: #666;
+    color: #fff;
+}
+
+#popupAlert {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+}
+
+#todoItems .checkbox {
+    margin: 0;
+}
+
+    #todoItems .checkbox input {
+        float: right;
+        margin-left: 3px;
+        position: relative;
+    }
+
+.btn-close-modal {
+    float: right;
+}
